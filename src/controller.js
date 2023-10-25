@@ -40,19 +40,36 @@ class LibroController {
 
     async add(req, res) {
         try {
-            const libro = req.body; // Obtiene los datos del libro del cuerpo de la solicitud.
-            // Intenta agregar un nuevo libro a la base de datos.
+            const libro = req.body;
+    
+            // Validación de atributos requeridos
+            if (!libro.nombre || !libro.autor || !libro.ISBN || !/^\d{13}$/.test(libro.ISBN)) {
+                return res.status(400).json({ error: 'Datos de libro incorrectos' });
+            }
+    
+            // Verificar si el libro ya existe en la base de datos por ISBN
+            const [existingBook] = await pool.query('SELECT id FROM libros WHERE ISBN = ?', [libro.ISBN]);
+            if (existingBook.length > 0) {
+                return res.status(400).json({ error: 'Este libro ya existe en la base de datos' });
+            }
+    
+            // Intenta agregar un nuevo libro a la base de datos
             const [result] = await pool.query(
                 "INSERT INTO libros(nombre, autor, categoria, `año-publicacion`, ISBN) VALUES (?, ?, ?, ?, ?)",
                 [libro.nombre, libro.autor, libro.categoria, libro['año-publicacion'], libro.ISBN]
-            ); // Realiza una consulta SQL para insertar un nuevo libro en la base de datos.
-            res.json({ "Id insertado": result.insertId }); // Te muestra el ID del libro insertado en formato JSON.
+            );
+    
+            if (result.affectedRows === 1) {
+                res.json({ "Id insertado": result.insertId });
+            } else {
+                res.status(500).json({ error: 'Error al agregar un libro' });
+            }
         } catch (error) {
-            // En caso de un error, registra el error y responde con un error 500
-            console.error(error); // Registra el error en la consola.
-            res.status(500).json({ error: 'Error al agregar un libro' }); // Responde con un mensaje de error y un código de estado 500 (Error del servidor).
+            console.error(error);
+            res.status(500).json({ error: 'Error al agregar un libro' });
         }
     }
+    
 
     async deleteId(req, res) {
         try {
