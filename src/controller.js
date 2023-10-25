@@ -73,14 +73,22 @@ class LibroController {
 
     async deleteId(req, res) {
         try {
-            const libro = req.body; // Obtiene los datos del libro a eliminar del cuerpo de la solicitud.
-            // Intenta eliminar un libro por su ID
-            const [result] = await pool.query("DELETE FROM libros WHERE id=?", [libro.id]); // Realiza una consulta SQL para eliminar un libro por su ID.
-            res.json({ "Registros eliminados": result.affectedRows }); // Responde con la cantidad de registros eliminados en formato JSON.
+            const libro = req.body;
+    
+            if (!libro.id) {
+                return res.status(400).json({ error: 'Se requiere un ID para eliminar un libro' });
+            }
+    
+            const [result] = await pool.query("DELETE FROM libros WHERE id=?", [libro.id]);
+    
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'No se encontró un libro con ese ID' });
+            }
+    
+            res.json({ "Registros eliminados": result.affectedRows });
         } catch (error) {
-            // En caso de un error, registra el error y responde con un error 500
-            console.error(error); // Registra el error en la consola.
-            res.status(500).json({ error: 'Error al eliminar un libro por ID' });// Responde con un mensaje de error y un código de estado 500 (Error del servidor).
+            console.error(error);
+            res.status(500).json({ error: 'Error al eliminar un libro por ID' });
         }
     }
 
