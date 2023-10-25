@@ -11,13 +11,19 @@ class LibroController {
         try {
             // Intenta obtener todos los libros desde la base de datos
             const [result] = await pool.query('SELECT * FROM libros'); // Realiza una consulta SQL para seleccionar todos los libros en la base de datos.
+            
+            if (result.length === 0) {
+                // Si no se encuentran libros en la base de datos, responde con un mensaje de éxito, pero vacío.
+                return res.json({ message: 'No se encontraron libros.' });
+            }
+    
             res.json(result); // Responde con los resultados de la consulta en formato JSON.
         } catch (error) {
             // En caso de un error, registra el error y responde con un error 500
             console.error(error); // Registra el error en la consola.
             res.status(500).json({ error: 'Error al obtener todos los libros' }); // Responde con un mensaje de error y un código de estado 500 (Error del servidor).
         }
-    }
+    }    
 
     async getOne(req, res) {
         try {
@@ -69,7 +75,6 @@ class LibroController {
             res.status(500).json({ error: 'Error al agregar un libro' });
         }
     }
-    
 
     async deleteId(req, res) {
         try {
